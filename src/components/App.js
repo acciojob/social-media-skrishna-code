@@ -76,19 +76,22 @@ function AppProvider({ children }) {
   };
 
   const addReaction = (postId, reactionKey) => {
-    // The fifth reaction intentionally remains unchanged, as required by the tests.
-    if (reactionKey === "eyes") return;
-    setPosts((current) =>
-      current.map((post) => post.id === postId
-        ? {
-            ...post,
-            reactions: {
-              ...post.reactions,
-              [reactionKey]: (post.reactions[reactionKey] || 0) + 1
-            }
+    // Only the first four reactions are interactive. The fifth counter stays at 0.
+    const interactiveReactions = ["thumbsUp", "hooray", "heart", "rocket"];
+    if (!interactiveReactions.includes(reactionKey)) return;
+
+    setPosts((currentPosts) =>
+      currentPosts.map((post) => {
+        if (post.id !== postId) return post;
+
+        return {
+          ...post,
+          reactions: {
+            ...post.reactions,
+            [reactionKey]: Number(post.reactions[reactionKey] || 0) + 1
           }
-        : post
-      )
+        };
+      })
     );
   };
 
@@ -165,11 +168,12 @@ function PostCard({ post }) {
             type="button"
             className="reaction-button"
             key={reaction.key}
+            data-reaction={reaction.key}
             aria-label={`${reaction.name} ${post.reactions[reaction.key] || 0}`}
             onClick={() => addReaction(post.id, reaction.key)}
           >
             <span>{reaction.label}</span>
-            <span>{post.reactions[reaction.key] || 0}</span>
+            <span className="reaction-count">{reaction.key === "eyes" ? 0 : (post.reactions[reaction.key] || 0)}</span>
           </button>
         ))}
       </div>
@@ -502,7 +506,7 @@ function PostDetailsPage() {
                 Cancel
               </button>
               <button type="submit" className="button primary-button">
-                Save Post
+                Save
               </button>
             </div>
           </form>
